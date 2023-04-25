@@ -27,7 +27,7 @@
 #define PRINT_HEXDUMP(STR,ARG, ARG_LEN,level) \
 	print_hex_dump(KERN_INFO, STR, DUMP_PREFIX_ADDRESS, 16, 1, ARG, ARG_LEN, 1);
 
-#define COMMAND_RESPONSE_TIMEOUT (5 * HZ)
+#define COMMAND_RESPONSE_TIMEOUT (25 * HZ)
 u8 ap_bssid[MAC_ADDR_LEN];
 
 int internal_scan_request(struct esp_wifi_device *priv, char* ssid,

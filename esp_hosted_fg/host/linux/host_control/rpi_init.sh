@@ -41,6 +41,7 @@ wlan_init()
 {
     build_c_demo_app
     build_python_demo_app
+    echo test
 
     cd ../host_driver/esp32/
     if [ `lsmod | grep esp32 | wc -l` != "0" ]; then
@@ -57,17 +58,19 @@ wlan_init()
     else
         VAL_CONFIG_TEST_RAW_TP=y
     fi
+	
+    echo "build makefile"
 
     # For Linux other than Raspberry Pi, Please point
     # CROSS_COMPILE -> <Toolchain-Path>/bin/arm-linux-gnueabihf-
     # KERNEL        -> Place where kernel is checked out and built
     # ARCH          -> Architecture
-    make -j8 target=$IF_TYPE CROSS_COMPILE=/usr/bin/arm-linux-gnueabihf- KERNEL="/lib/modules/$(uname -r)/build" \
-    CONFIG_TEST_RAW_TP="$VAL_CONFIG_TEST_RAW_TP" ARCH=arm
+    make -j8 target=$IF_TYPE KERNEL="/lib/modules/$(uname -r)/build" \
+    CONFIG_TEST_RAW_TP="$VAL_CONFIG_TEST_RAW_TP"
 
     if [ "$RESETPIN" = "" ] ; then
         #By Default, BCM6 is GPIO on host. use resetpin=6
-        sudo insmod $MODULE_NAME resetpin=6
+        sudo insmod $MODULE_NAME resetpin=200
     else
         #Use resetpin value from argument
         sudo insmod $MODULE_NAME $RESETPIN
@@ -165,21 +168,23 @@ else
     MODULE_NAME=esp32_${IF_TYPE}.ko
 fi
 
-if [ "$IF_TYPE" = "spi" ] ; then
-    rm spidev_disabler.dtbo
-    # Disable default spidev driver
-    dtc spidev_disabler.dts -O dtb > spidev_disabler.dtbo
-    sudo dtoverlay -d . spidev_disabler
-fi
+#if [ "$IF_TYPE" = "spi" ] ; then
+#    rm spidev_disabler.dtbo
+#    # Disable default spidev driver
+#    dtc spidev_disabler.dts -O dtb > spidev_disabler.dtbo
+#    sudo dtoverlay -d . spidev_disabler
+#fi
 
-if [ `lsmod | grep bluetooth | wc -l` = "0" ]; then
-    echo "bluetooth module inserted"
-    sudo modprobe bluetooth
-fi
+#if [ `lsmod | grep bluetooth | wc -l` = "0" ]; then
+#    echo "bluetooth module inserted"
+#    sudo modprobe bluetooth
+#fi
 
-if [ `lsmod | grep bluetooth | wc -l` != "0" ]; then
-    wlan_init
-fi
+wlan_init
+
+#if [ `lsmod | grep bluetooth | wc -l` != "0" ]; then
+#    wlan_init
+#fi
 
 if [ "$BT_INIT_SET" != "0" ] ; then
     bt_init

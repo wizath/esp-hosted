@@ -569,6 +569,8 @@ static int spi_dev_init(int spi_clk_mhz)
 		return status;
 	}
 
+	data_path = 1;
+
 	status = request_irq(SPI_IRQ, spi_interrupt_handler,
 			IRQF_SHARED | IRQF_TRIGGER_RISING,
 			"ESP_SPI", spi_context.esp_spi_dev);

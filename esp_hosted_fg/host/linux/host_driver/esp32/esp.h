@@ -23,6 +23,7 @@
 #include <linux/workqueue.h>
 #include <linux/interrupt.h>
 #include <linux/netdevice.h>
+#include <linux/version.h>
 #include <net/bluetooth/bluetooth.h>
 #include <net/bluetooth/hci_core.h>
 #include "adapter.h"

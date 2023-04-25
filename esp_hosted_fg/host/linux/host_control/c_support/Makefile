@@ -4,7 +4,7 @@ CROSS_COMPILE :=
 
 CFLAGS = -C -Wall --sysroot=$(SDKTARGETSYSROOT)
 
-CFLAGS_SANITIZE = -fsanitize=undefined  -fsanitize-address-use-after-scope -fsanitize-undefined-trap-on-error  -fstack-protector-all -fstack-check -fsanitize=address -fsanitize=pointer-compare -fno-omit-frame-pointer -static-libasan
+CFLAGS_SANITIZE = -fsanitize=undefined  -fsanitize-address-use-after-scope -fsanitize-undefined-trap-on-error  -fstack-protector-all -fstack-check -fsanitize=address -fno-omit-frame-pointer -static-libasan
 
 LINKER = -lpthread -lrt
 

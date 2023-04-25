@@ -38,7 +38,8 @@ static u32 raw_tp_timer_count;
 static u8 traffic_open_init_done;
 static struct completion traffic_open;
 
-static void log_raw_tp_stats_timer_cb(struct timer_list *timer)
+//static void log_raw_tp_stats_timer_cb(struct timer_list *timer)
+static void log_raw_tp_stats_timer_cb(unsigned long data)
 {
 	unsigned long actual_bandwidth = 0;
 
@@ -51,6 +52,8 @@ static void log_raw_tp_stats_timer_cb(struct timer_list *timer)
 	raw_tp_timer_count++;
 	test_raw_tp_len = 0;
 }
+
+
 
 static int raw_tp_tx_process(void *data)
 {
@@ -112,7 +115,9 @@ static void process_raw_tp_flags(void)
 
 	if (test_raw_tp) {
 
-		timer_setup(&log_raw_tp_stats_timer, log_raw_tp_stats_timer_cb, 0);
+		// timer_setup(&log_raw_tp_stats_timer, log_raw_tp_stats_timer_cb, 0);
+		setup_timer(&log_raw_tp_stats_timer, log_raw_tp_stats_timer_cb, 0);
+
 		mod_timer(&log_raw_tp_stats_timer, jiffies + msecs_to_jiffies(1000));
 		log_raw_tp_stats_timer_running = 1;
 

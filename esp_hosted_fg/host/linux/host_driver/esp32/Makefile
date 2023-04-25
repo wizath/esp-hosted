@@ -3,11 +3,11 @@ CONFIG_TEST_RAW_TP := n
 CONFIG_ENABLE_MONITOR_PROCESS = n
 
 # Toolchain Path
-CROSS_COMPILE := /usr/bin/arm-linux-gnueabihf-
+# CROSS_COMPILE := /usr/bin/arm-linux-gnueabihf-
 # Linux Kernel header
 KERNEL := /lib/modules/$(shell uname -r)/build
 # Architecture
-ARCH := arm
+# ARCH := arm
 
 #Default interface is sdio
 MODULE_NAME=esp32_sdio
@@ -55,8 +55,8 @@ ifeq ($(CONFIG_SUPPORT_ESP_SERIAL), y)
 endif
 
 all: clean
-	make ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $(KERNEL) M=$(PWD) modules
+	make -C $(KERNEL) M=$(PWD) modules
 
 clean:
 	rm -rf *.o sdio/*.o spi/*.o *.ko
-	make ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $(KERNEL) M=$(PWD) clean
+	make -C $(KERNEL) M=$(PWD) clean

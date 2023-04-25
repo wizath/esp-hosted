@@ -44,7 +44,7 @@
  *    This is opposite of TEST_RAW_TP__ESP_TO_HOST. when (a) TEST_RAW_TP__ESP_TO_HOST
  *    is disabled, it will automatically mean throughput to be measured from host to ESP
  */
-#define TEST_RAW_TP                    0
+#define TEST_RAW_TP                    1
 
 #ifdef CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
   /* Stats to show task wise CPU utilization */
