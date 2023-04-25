@@ -187,7 +187,7 @@ static int wait_and_decode_cmd_resp(struct esp_wifi_device *priv,
 		printk(KERN_ERR "esp32: Command[%u] timed out\n", cmd_node->cmd_code);
 		ret = -EINVAL;
 	} else {
-		/*printk(KERN_DEBUG "Resp for command [%u]\n", cmd_node->cmd_code);*/
+		printk(KERN_DEBUG "Resp for command [%u]\n", cmd_node->cmd_code);
 		ret = 0;
 	}
 
@@ -303,7 +303,7 @@ static void esp_cmd_work(struct work_struct *work)
 	spin_lock_bh(&adapter->cmd_lock);
 	if (adapter->cur_cmd) {
 		/* Busy in another command */
-		/*printk(KERN_DEBUG "esp32: Busy in another cmd execution\n");*/
+		printk(KERN_DEBUG "esp32: Busy in another cmd execution\n");
 		spin_unlock_bh(&adapter->cmd_lock);
 		return;
 	}
@@ -312,7 +312,7 @@ static void esp_cmd_work(struct work_struct *work)
 
 	if (list_empty(&adapter->cmd_pending_queue)) {
 		/* No command to process */
-		/*printk(KERN_DEBUG "esp32: No more command in queue.\n");*/
+		printk(KERN_DEBUG "esp32: No more command in queue.\n");
 		spin_unlock_bh(&adapter->cmd_pending_queue_lock);
 		spin_unlock_bh(&adapter->cmd_lock);
 		return;
@@ -326,7 +326,7 @@ static void esp_cmd_work(struct work_struct *work)
 		spin_unlock_bh(&adapter->cmd_lock);
 		return;
 	}
-	/*printk(KERN_DEBUG "esp32: Processing Command [0x%X]\n", cmd_node->cmd_code);*/
+	printk(KERN_DEBUG "esp32: Processing Command [0x%X]\n", cmd_node->cmd_code);
 
 	list_del(&cmd_node->list);
 
@@ -360,7 +360,7 @@ static void esp_cmd_work(struct work_struct *work)
 	}
 
 	if (!list_empty(&adapter->cmd_pending_queue)) {
-		/*printk(KERN_DEBUG "Ym2: Pending cmds, queue work again\n");*/
+		printk(KERN_DEBUG "Ym2: Pending cmds, queue work again\n");
 		spin_unlock_bh(&adapter->cmd_pending_queue_lock);
 		queue_work(adapter->cmd_wq, &adapter->cmd_work);
 		return;
@@ -905,8 +905,11 @@ int cmd_auth_request(struct esp_wifi_device *priv,
 
 	adapter = priv->adapter;
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 19, 0))
 	cmd_len = sizeof(struct cmd_sta_auth) + req->auth_data_len;
-
+#else
+	cmd_len = sizeof(struct cmd_sta_auth) + req->sae_data_len;
+#endif
 	cmd_node = prepare_command_request(adapter, CMD_STA_AUTH, cmd_len);
 
 	if (!cmd_node) {
@@ -918,8 +921,13 @@ int cmd_auth_request(struct esp_wifi_device *priv,
 	memcpy(cmd->bssid, bss->bssid, MAC_ADDR_LEN);
 	cmd->channel = bss->channel->hw_value;
 	cmd->auth_type = req->auth_type;
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 19, 0))
 	cmd->auth_data_len = req->auth_data_len;
 	memcpy(cmd->auth_data, req->auth_data, req->auth_data_len);
+#else
+	cmd->auth_data_len = req->sae_data_len;
+	memcpy(cmd->auth_data, req->sae_data, req->sae_data_len);
+#endif
 
 	printk(KERN_INFO "Authentication request: %pM %d %d %d %d\n",
 			cmd->bssid, cmd->channel, cmd->auth_type, cmd->auth_data_len,
@@ -1171,6 +1179,7 @@ int cmd_init_interface(struct esp_wifi_device *priv)
 		printk(KERN_ERR "esp32: Failed to get command node\n");
 		return -ENOMEM;
 	}
+	printk(KERN_INFO "sending init iface\r\n");
 
 	queue_cmd_node(priv->adapter, cmd_node, ESP_CMD_DFLT_PRIO);
 	queue_work(priv->adapter->cmd_wq, &priv->adapter->cmd_work);

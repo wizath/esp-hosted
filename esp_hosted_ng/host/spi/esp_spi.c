@@ -66,6 +66,8 @@ static void close_data_path(void)
 
 static irqreturn_t spi_data_ready_interrupt_handler(int irq, void * dev)
 {
+	printk(KERN_INFO "spi drdy handler\r\n");
+
 	/* ESP peripheral has queued buffer for transmission */
  	if (spi_context.spi_workqueue)
  		queue_work(spi_context.spi_workqueue, &spi_context.spi_work);
@@ -75,6 +77,8 @@ static irqreturn_t spi_data_ready_interrupt_handler(int irq, void * dev)
 
 static irqreturn_t spi_interrupt_handler(int irq, void * dev)
 {
+	printk(KERN_INFO "spi interrupt handler\r\n");
+
 	/* ESP peripheral is ready for next SPI transaction */
 	if (spi_context.spi_workqueue)
 		queue_work(spi_context.spi_workqueue, &spi_context.spi_work);
@@ -315,7 +319,10 @@ static int process_rx_buf(struct sk_buff *skb)
 
 	header = (struct esp_payload_header *) skb->data;
 
+	//print_hex_dump(KERN_ERR, "spi_rx_pre: ", DUMP_PREFIX_ADDRESS, 16, 1, skb->data, skb->len, 1);
+
 	if (header->if_type >= ESP_MAX_IF) {
+		pr_info("%s:%d--header->if_type err:%d\n",__func__,__LINE__,header->if_type);
 		return -EINVAL;
 	}
 
@@ -323,17 +330,20 @@ static int process_rx_buf(struct sk_buff *skb)
 
 	/* Validate received SKB. Check len and offset fields */
 	if (offset != sizeof(struct esp_payload_header)) {
+		pr_info("%s:%d--offset err:%d\n",__func__,__LINE__,offset);
 		return -EINVAL;
 	}
 
 	len = le16_to_cpu(header->len);
 	if (!len) {
+		pr_info("%s:%d--len err:%d\n",__func__,__LINE__,len);
 		return -EINVAL;
 	}
 
 	len += sizeof(struct esp_payload_header);
 
 	if (len > SPI_BUF_SIZE) {
+		pr_info("%s:%d--len err:%d\n",__func__,__LINE__,len);
 		return -EINVAL;
 	}
 
@@ -343,6 +353,7 @@ static int process_rx_buf(struct sk_buff *skb)
 
 	if (!data_path) {
 		/*printk(KERN_INFO "%s:%u datapath closed\n",__func__,__LINE__);*/
+		pr_info("%s:%d--data_path err\n",__func__,__LINE__);
 		return -EPERM;
 	}
 
@@ -413,8 +424,10 @@ static void esp_spi_work(struct work_struct *work)
 
 			if (tx_skb) {
 				trans.tx_buf = tx_skb->data;
-				/*print_hex_dump(KERN_ERR, "tx: ", DUMP_PREFIX_ADDRESS, 16, 1, trans.tx_buf, 32, 1);*/
+				printk(KERN_INFO "Next TX pkt\n");
+				print_hex_dump(KERN_ERR, "spi_tx: ", DUMP_PREFIX_ADDRESS, 16, 1, trans.tx_buf, tx_skb->len, 1);
 			} else {
+				printk(KERN_INFO "starting rx\n");
 				tx_skb = esp_alloc_skb(SPI_BUF_SIZE);
 				trans.tx_buf = skb_put(tx_skb, SPI_BUF_SIZE);
 				memset((void*)trans.tx_buf, 0, SPI_BUF_SIZE);
@@ -450,6 +463,9 @@ static void esp_spi_work(struct work_struct *work)
 				if (tx_skb)
 					dev_kfree_skb(tx_skb);
 			}
+
+			printk(KERN_INFO "stopping rx\n");
+
 		}
 	}
 

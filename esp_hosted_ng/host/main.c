@@ -610,6 +610,9 @@ static void process_rx_packet(struct esp_adapter *adapter, struct sk_buff *skb)
 		}
 	}
 
+	printk(KERN_INFO "next rx pkt->\n");
+	print_hex_dump(KERN_ERR, "spi_rx: ", DUMP_PREFIX_ADDRESS, 16, 1, skb->data, skb->len, 1);
+
 	/* chop off the header from skb */
 	skb_pull(skb, offset);
 
@@ -868,11 +871,12 @@ static void esp_reset(void)
 			gpio_direction_output(resetpin, true);
 
 			/* HOST's resetpin set to LOW */
-			gpio_set_value(resetpin, 0);
+			gpio_set_value(resetpin, 1);
 			udelay(200);
 
 			/* HOST's resetpin set to INPUT */
-			gpio_direction_input(resetpin);
+			// gpio_direction_input(resetpin);
+			gpio_set_value(resetpin, 0);
 
 			printk(KERN_DEBUG "%s, ESP32: Triggering ESP reset.\n", __func__);
 		}
@@ -884,10 +888,16 @@ static int __init esp_init(void)
 {
 	int ret = 0;
 	struct esp_adapter *adapter = NULL;
+	
+	gpio_request(17, "sysfs");
+	gpio_direction_output(17, true);
+	gpio_set_value(17, 0);
 
 	/* Reset ESP, Clean start ESP */
 	esp_reset();
-	msleep(200);
+	msleep(1000);
+	
+	gpio_free(17);
 
 	adapter = init_adapter();
 

@@ -208,8 +208,10 @@ void CFG80211_RX_ASSOC_RESP(struct net_device *dev,
 	resp.req_ies_len = req_ies_len;
 
 	cfg80211_rx_assoc_resp(dev, &resp);
+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 19, 0))
+	cfg80211_rx_assoc_resp(dev, bss, buf, len, uapsd_queues, req_ies, req_ies_len);
 #else
-	cfg80211_rx_assoc_resp(dev, bss, buf, len, uapsd_queues, req_ies, req_ies_len)
+	cfg80211_rx_assoc_resp(dev, bss, buf, len, uapsd_queues);
 #endif
 }
 
@@ -234,10 +236,15 @@ static inline bool wireless_dev_current_bss_exists(struct wireless_dev *wdev)
 #define ZERO_LINK_ID
 #endif
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 15, 0))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 19, 0) && LINUX_VERSION_CODE < KERNEL_VERSION(5, 15, 0))
 static inline void eth_hw_addr_set(struct net_device *dev, const u8 *addr)
 {
 	ether_addr_copy(dev->dev_addr, addr, ETH_ALEN);
+}
+#else
+static inline void eth_hw_addr_set(struct net_device *dev, const u8 *addr)
+{
+	ether_addr_copy(dev->dev_addr, addr);
 }
 #endif
 
